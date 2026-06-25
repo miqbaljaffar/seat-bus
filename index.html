@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spin Acak Tempat Duduk Siswa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* Custom animation for spinning effect */
+        @keyframes pulse-card {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.03); filter: brightness(1.1) hue-rotate(10deg); }
+        }
+        .shuffling-active {
+            animation: pulse-card 0.15s infinite ease-in-out;
+        }
+        /* Hide scrollbar but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.253 8H18.2" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 tracking-tight">Smart Seating Randomizer</h1>
+                    <p class="text-xs text-slate-500 font-medium">Acak Urutan & Posisi Duduk Kelas Jadi Adil & Seru</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button id="btn-edit" onclick="toggleModal(true)" class="flex items-center justify-center gap-2 bg-white border border-slate-300 hover:border-indigo-500 text-slate-700 hover:text-indigo-600 font-semibold px-4 py-2.5 rounded-xl text-sm transition-all shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    Siswa (<span id="student-count">30</span>)
+                </button>
+                <button id="btn-print" onclick="window.print()" class="flex items-center justify-center gap-2 bg-white border border-slate-300 hover:border-slate-400 text-slate-700 font-semibold px-4 py-2.5 rounded-xl text-sm transition-all shadow-sm print:hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4H7v4a2 2 0 002 2zM17 9V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Cetak
+                </button>
+                <button id="btn-acak" onclick="shuffleSeats()" class="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-indigo-100 print:hidden">
+                    <span>Mulai Acak! 🌀</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 flex-grow w-full">
+        
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm overflow-hidden mb-6">
+            
+            <div class="w-full flex justify-center mb-10 print:mb-6">
+                <div class="relative w-full max-w-2xl bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl py-3 px-6 shadow-md text-center border-b-4 border-slate-900">
+                    <div class="absolute inset-x-0 top-0 h-1 bg-white/10 rounded-t-xl"></div>
+                    <span class="text-sm font-bold tracking-widest uppercase flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        PAPAN TULIS / MEJA GURU DEPAN
+                    </span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto no-scrollbar min-w-full">
+                <div class="flex flex-row justify-center gap-8 md:gap-16 min-w-[760px] p-2">
+                    
+                    <div class="flex-1 max-w-xl">
+                        <div class="text-center mb-4 bg-emerald-50 text-emerald-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-emerald-100 tracking-wide uppercase">
+                            Sayap Kiri (4 Baris Kursi)
+                        </div>
+                        <div id="left-grid" class="grid grid-cols-4 gap-3">
+                            </div>
+                    </div>
+
+                    <div class="w-10 sm:w-16 flex flex-col justify-around items-center border-l border-r border-dashed border-slate-200 bg-slate-50/50 rounded-xl relative">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest rotate-90 whitespace-nowrap absolute">LORONG TENGAH</span>
+                    </div>
+
+                    <div class="flex-1 max-w-xl">
+                        <div class="text-center mb-4 bg-sky-50 text-sky-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-sky-100 tracking-wide uppercase">
+                            Sayap Kanan (4 Baris Kursi)
+                        </div>
+                        <div id="right-grid" class="grid grid-cols-4 gap-3">
+                            </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
+            <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-4 flex gap-3 items-start">
+                <div class="text-indigo-600 p-1 bg-white rounded-lg border border-indigo-100 shadow-sm mt-0.5">💡</div>
+                <p class="text-xs text-indigo-900/80 leading-relaxed"><strong class="text-indigo-900 block font-semibold mb-0.5">Kapasitas Maksimal</strong> Tata letak ini mendukung konfigurasi 4x4 kiri dan 4x4 kanan (total 32 kursi). Karena ada 30 siswa, otomatis ada 2 kursi kosong demi kenyamanan posisi.</p>
+            </div>
+            <div class="bg-amber-50/60 border border-amber-100 rounded-xl p-4 flex gap-3 items-start">
+                <div class="text-amber-600 p-1 bg-white rounded-lg border border-amber-100 shadow-sm mt-0.5">🔊</div>
+                <p class="text-xs text-amber-900/80 leading-relaxed"><strong class="text-amber-900 block font-semibold mb-0.5">Efek Suara Realistis</strong> Dilengkapi sound engine bawaan web browser. Saat diacak, suara denting slot mesin akan otomatis berbunyi hingga selesai.</p>
+            </div>
+            <div class="bg-emerald-50/60 border border-emerald-100 rounded-xl p-4 flex gap-3 items-start">
+                <div class="text-emerald-600 p-1 bg-white rounded-lg border border-emerald-100 shadow-sm mt-0.5">💾</div>
+                <p class="text-xs text-emerald-900/80 leading-relaxed"><strong class="text-emerald-900 block font-semibold mb-0.5">Auto-Save Aman</strong> Hasil acakan bangku terakhir otomatis tersimpan di browser Anda. Tidak perlu takut hilang jika tidak sengaja me-refresh halaman.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-4 print:hidden">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400 font-medium">
+            &copy; 2026 Smart Classroom Tool &bull; Siap pasang di GitHub Pages
+        </div>
+    </footer>
+
+    <div id="modal-edit" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden transition-all">
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">Manajemen Daftar Siswa</h3>
+                    <p class="text-xs text-slate-500">Tulis satu nama per baris (Maksimal 32)</p>
+                </div>
+                <button onclick="toggleModal(false)" class="p-1.5 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-lg transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-5 flex-grow overflow-y-auto">
+                <textarea id="input-names" rows="12" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono tracking-wide leading-relaxed" placeholder="Masukkan nama siswa..."></textarea>
+                <div id="error-msg" class="mt-2 text-xs text-rose-500 hidden font-medium">⚠️ Batas maksimum tata letak ini adalah 32 kursi!</div>
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2">
+                <button onclick="toggleModal(false)" class="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-xl text-sm font-semibold transition-all">Batal</button>
+                <button onclick="saveStudentsList()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-indigo-100">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial list of students provided by user
+        let students = [
+            "Nirvana", "Diena", "Anisa", "Malvian", "Rezo",
+            "Vasha", "Windi", "Alya", "Dzaky", "Moch.Dzaky",
+            "Maryam", "Sabrina", "Lilih", "Didan", "Alfianda",
+            "Syifa", "Finna", "Azarah", "Nabil", "Bima",
+            "Alma", "Dilla", "Sekar", "Rafli", "Astny",
+            "Riska", "Rahma", "Juanda", "Romansyah", "Pasya"
+        ];
+
+        // Total grid capacity (4x4 left + 4x4 right = 32 seats)
+        const TOTAL_SEATS = 32;
+        let currentArrangement = [];
+        let isShuffling = false;
+
+        // Web Audio Synthesizer Engine for cool sound effect
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        function playClickSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(580, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.06);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.06);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.06);
+        }
+
+        function playChimeSound() {
+            if (!audioCtx) return;
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 chords
+            const now = audioCtx.currentTime;
+            notes.forEach((freq, idx) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + (idx * 0.08));
+                gain.gain.setValueAtTime(0.06, now + (idx * 0.08));
+                gain.gain.linearRampToValueAtTime(0, now + (idx * 0.08) + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + (idx * 0.08));
+                osc.stop(now + (idx * 0.08) + 0.4);
+            });
+        }
+
+        // Initialize Seating Setup Data
+        function initializeSeating() {
+            const saved = localStorage.getItem('saved_seating_arrangement');
+            const savedStudents = localStorage.getItem('saved_students_list');
+            
+            if (savedStudents) {
+                students = JSON.parse(savedStudents);
+            }
+            
+            document.getElementById('student-count').innerText = students.length;
+            document.getElementById('input-names').value = students.join('\n');
+
+            if (saved) {
+                currentArrangement = JSON.parse(saved);
+                // Validation against modified student count length match
+                const activeNames = currentArrangement.filter(n => n !== "KOSONG");
+                if (JSON.stringify(activeNames.sort()) !== JSON.stringify([...students].sort())) {
+                    buildFreshArrangement();
+                }
+            } else {
+                buildFreshArrangement();
+            }
+            renderLayout(currentArrangement, false);
+        }
+
+        function buildFreshArrangement() {
+            currentArrangement = [...students];
+            while (currentArrangement.length < TOTAL_SEATS) {
+                currentArrangement.push("KOSONG");
+            }
+        }
+
+        // Render Cards inside Grids
+        function renderLayout(seatArray, isShufflingActive) {
+            const leftGrid = document.getElementById('left-grid');
+            const rightGrid = document.getElementById('right-grid');
+            
+            leftGrid.innerHTML = '';
+            rightGrid.innerHTML = '';
+
+            for (let i = 0; i < TOTAL_SEATS; i++) {
+                const isLeft = i < 16;
+                const normalizedIndex = isLeft ? i : i - 16;
+                const row = Math.floor(normalizedIndex / 4) + 1;
+                const col = (normalizedIndex % 4) + 1;
+                
+                const card = document.createElement('div');
+                const personName = seatArray[i];
+
+                if (personName === "KOSONG") {
+                    card.className = "bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl p-3 flex flex-col justify-between items-center min-h-[76px] transition-all text-center opacity-60 select-none";
+                    card.innerHTML = `
+                        <span class="text-[10px] font-bold tracking-tight text-slate-400 bg-slate-200/50 px-1.5 py-0.5 rounded">B${row}-K${col}</span>
+                        <span class="text-xs font-semibold text-slate-400 italic">Kosong</span>
+                    `;
+                } else {
+                    let sideTheme = isLeft 
+                        ? "bg-white hover:bg-emerald-50/40 border border-slate-200 shadow-sm" 
+                        : "bg-white hover:bg-sky-50/40 border border-slate-200 shadow-sm";
+                    
+                    if (isShufflingActive) {
+                        sideTheme = "bg-indigo-50 border-indigo-300 text-indigo-700 shuffling-active shadow-md shadow-indigo-50";
+                    }
+
+                    card.className = `${sideTheme} rounded-xl p-3 flex flex-col justify-between items-center min-h-[76px] transition-all text-center select-none`;
+                    
+                    const labelBadgeColor = isLeft ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-sky-50 text-sky-700 border-sky-100";
+                    
+                    card.innerHTML = `
+                        <span class="text-[9px] font-extrabold tracking-wider ${labelBadgeColor} border px-2 py-0.5 rounded-md uppercase">B${row}-K${col}</span>
+                        <span class="text-xs sm:text-sm font-bold text-slate-800 tracking-wide truncate w-full mt-1.5">${personName}</span>
+                    `;
+                }
+                
+                if (isLeft) {
+                    leftGrid.appendChild(card);
+                } else {
+                    rightGrid.appendChild(card);
+                }
+            }
+        }
+
+        // Fisher-Yates Shuffle Logic Algorithm
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Spin Engine Execution Loop
+        function shuffleSeats() {
+            if (isShuffling) return;
+            initAudio();
+            isShuffling = true;
+
+            const btn = document.getElementById('btn-acak');
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Mengacak Kursi...
+            `;
+
+            let duration = 2800; 
+            let intervalTime = 70; 
+            let elapsed = 0;
+
+            // Generate slots structure including KOSONG slots
+            let tempPool = [...students];
+            while (tempPool.length < TOTAL_SEATS) {
+                tempPool.push("KOSONG");
+            }
+
+            const loop = setInterval(() => {
+                let randomTickState = shuffleArray([...tempPool]);
+                renderLayout(randomTickState, true);
+                playClickSound();
+                
+                elapsed += intervalTime;
+                if (elapsed >= duration) {
+                    clearInterval(loop);
+                    
+                    // Definitive ultimate state shuffle
+                    currentArrangement = shuffleArray([...tempPool]);
+                    renderLayout(currentArrangement, false);
+                    playChimeSound();
+
+                    // Persist state to storage
+                    localStorage.setItem('saved_seating_arrangement', JSON.stringify(currentArrangement));
+
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>Mulai Acak! 🌀</span>';
+                    isShuffling = false;
+                }
+            }, intervalTime);
+        }
+
+        // Modal Box Control UI Toggles
+        function toggleModal(show) {
+            const modal = document.getElementById('modal-edit');
+            if (show) {
+                document.getElementById('input-names').value = students.join('\n');
+                document.getElementById('error-msg').classList.add('hidden');
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // Save Names Handler From Input Area
+        function saveStudentsList() {
+            const textarea = document.getElementById('input-names');
+            const lines = textarea.value.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+            
+            if (lines.length > TOTAL_SEATS) {
+                document.getElementById('error-msg').classList.remove('hidden');
+                return;
+            }
+
+            students = lines;
+            document.getElementById('student-count').innerText = students.length;
+            localStorage.setItem('saved_students_list', JSON.stringify(students));
+            
+            buildFreshArrangement();
+            localStorage.setItem('saved_seating_arrangement', JSON.stringify(currentArrangement));
+            renderLayout(currentArrangement, false);
+            
+            toggleModal(false);
+        }
+
+        // Self run bootstrap trigger
+        window.onload = initializeSeating;
+    </script>
+</body>
+</html>
