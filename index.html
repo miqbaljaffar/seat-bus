@@ -91,7 +91,7 @@
                             Sayap Kiri (4 Baris Kursi)
                         </div>
                         <div id="left-grid" class="grid grid-cols-4 gap-3">
-                            </div>
+                        </div>
                     </div>
 
                     <div class="w-10 sm:w-16 flex flex-col justify-around items-center border-l border-r border-dashed border-slate-200 bg-slate-50/50 rounded-xl relative">
@@ -103,7 +103,7 @@
                             Sayap Kanan (4 Baris Kursi)
                         </div>
                         <div id="right-grid" class="grid grid-cols-4 gap-3">
-                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -330,10 +330,7 @@
                         sideTheme = "bg-indigo-50 border-indigo-300 text-indigo-700 shuffling-active shadow-md shadow-indigo-50";
                     }
 
-                    // HIGHLIGHT KHUSUS UNTUK ANISA & ROMANSYAH
-                    if (personName === "Anisa" || personName === "Romansyah") {
-                        if (!isShufflingActive) sideTheme = "bg-pink-50 border-pink-300 shadow-md shadow-pink-100";
-                    }
+                    // Baris kode highlight warna pink untuk Anisa dan Romansyah telah dihapus
 
                     card.className = `${sideTheme} rounded-xl p-3 flex flex-col justify-between items-center min-h-[76px] transition-all text-center select-none`;
                     
