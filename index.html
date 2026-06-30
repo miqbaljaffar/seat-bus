@@ -161,26 +161,23 @@
         // Initial list of students provided by user
         let students = [
             "Nirvana", "Diena", "Anisa", "Malvian", "Rezo",
-            "Vasha", "Windi", "Alya", "Dzaky", "Moch.Dzaky",
+            "Vasha", "Windi", "Alya", "Dzaky", "Zacky",
             "Maryam", "Sabrina", "Lilih", "Didan", "Alfianda",
             "Syifa", "Finna", "Azarah", "Nabil", "Bima",
             "Alma", "Dilla", "Sekar", "Rafli", "Astny",
             "Riska", "Rahma", "Juanda", "Romansyah", "Pasya"
         ];
 
-        // Total grid capacity (4x4 left + 4x4 right = 32 seats)
         const TOTAL_SEATS = 32;
         let currentArrangement = [];
         let isShuffling = false;
 
-        // Web Audio Synthesizer Engine for cool sound effect
+        // Web Audio Synthesizer Engine
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
 
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new AudioContext();
-            }
+            if (!audioCtx) audioCtx = new AudioContext();
         }
 
         function playClickSound() {
@@ -200,7 +197,7 @@
 
         function playChimeSound() {
             if (!audioCtx) return;
-            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 chords
+            const notes = [523.25, 659.25, 783.99, 1046.50];
             const now = audioCtx.currentTime;
             notes.forEach((freq, idx) => {
                 const osc = audioCtx.createOscillator();
@@ -216,7 +213,6 @@
             });
         }
 
-        // Initialize Seating Setup Data
         function initializeSeating() {
             const saved = localStorage.getItem('saved_seating_arrangement');
             const savedStudents = localStorage.getItem('saved_students_list');
@@ -230,7 +226,6 @@
 
             if (saved) {
                 currentArrangement = JSON.parse(saved);
-                // Validation against modified student count length match
                 const activeNames = currentArrangement.filter(n => n !== "KOSONG");
                 if (JSON.stringify(activeNames.sort()) !== JSON.stringify([...students].sort())) {
                     buildFreshArrangement();
@@ -241,14 +236,69 @@
             renderLayout(currentArrangement, false);
         }
 
-        function buildFreshArrangement() {
-            currentArrangement = [...students];
-            while (currentArrangement.length < TOTAL_SEATS) {
-                currentArrangement.push("KOSONG");
+        // FUNGSI BARU: Logika penempatan khusus (Anisa & Romansyah)
+        function generateValidArrangement(sourceStudents) {
+            let arr = new Array(TOTAL_SEATS).fill(null);
+            
+            // Cek apakah keduanya masih ada di dalam daftar (berjaga-jaga jika dihapus via Edit Siswa)
+            let hasAnisa = sourceStudents.includes("Anisa");
+            let hasRomansyah = sourceStudents.includes("Romansyah");
+            
+            if (hasAnisa && hasRomansyah) {
+                // Daftar index awal di mana 2 orang bisa duduk bersebelahan 
+                // Tanpa terpotong baris (tiap baris ada 4 kursi) dan tanpa lompat lorong
+                const validPairStarts = [
+                    0, 1, 2,        // Baris 1 Kiri
+                    4, 5, 6,        // Baris 2 Kiri
+                    8, 9, 10,       // Baris 3 Kiri
+                    12, 13, 14,     // Baris 4 Kiri
+                    16, 17, 18,     // Baris 1 Kanan
+                    20, 21, 22,     // Baris 2 Kanan
+                    24, 25, 26,     // Baris 3 Kanan
+                    28, 29, 30      // Baris 4 Kanan
+                ];
+                
+                // Pilih secara acak lokasi kursi untuk mereka berdua
+                const pairStart = validPairStarts[Math.floor(Math.random() * validPairStarts.length)];
+                
+                // Acak siapa yang duduk di sebelah kiri dan siapa di kanan
+                const pair = Math.random() > 0.5 ? ["Anisa", "Romansyah"] : ["Romansyah", "Anisa"];
+                
+                // Tempatkan mereka di array utama
+                arr[pairStart] = pair[0];
+                arr[pairStart + 1] = pair[1];
+                
+                // Saring sisa siswa selain Anisa dan Romansyah
+                let pool = sourceStudents.filter(s => s !== "Anisa" && s !== "Romansyah");
+                while(pool.length < TOTAL_SEATS - 2) {
+                    pool.push("KOSONG");
+                }
+                
+                // Acak sisa siswa
+                pool = shuffleArray(pool);
+                
+                // Masukkan sisa siswa ke kursi yang masih kosong (null)
+                let poolIdx = 0;
+                for(let i = 0; i < TOTAL_SEATS; i++) {
+                    if (arr[i] === null) {
+                        arr[i] = pool[poolIdx];
+                        poolIdx++;
+                    }
+                }
+            } else {
+                // Jika salah satu dari mereka dihapus dari daftar, gunakan acakan normal
+                let pool = [...sourceStudents];
+                while(pool.length < TOTAL_SEATS) pool.push("KOSONG");
+                arr = shuffleArray(pool);
             }
+            
+            return arr;
         }
 
-        // Render Cards inside Grids
+        function buildFreshArrangement() {
+            currentArrangement = generateValidArrangement(students);
+        }
+
         function renderLayout(seatArray, isShufflingActive) {
             const leftGrid = document.getElementById('left-grid');
             const rightGrid = document.getElementById('right-grid');
@@ -280,6 +330,11 @@
                         sideTheme = "bg-indigo-50 border-indigo-300 text-indigo-700 shuffling-active shadow-md shadow-indigo-50";
                     }
 
+                    // HIGHLIGHT KHUSUS UNTUK ANISA & ROMANSYAH
+                    if (personName === "Anisa" || personName === "Romansyah") {
+                        if (!isShufflingActive) sideTheme = "bg-pink-50 border-pink-300 shadow-md shadow-pink-100";
+                    }
+
                     card.className = `${sideTheme} rounded-xl p-3 flex flex-col justify-between items-center min-h-[76px] transition-all text-center select-none`;
                     
                     const labelBadgeColor = isLeft ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-sky-50 text-sky-700 border-sky-100";
@@ -298,7 +353,6 @@
             }
         }
 
-        // Fisher-Yates Shuffle Logic Algorithm
         function shuffleArray(array) {
             let currentIndex = array.length, randomIndex;
             while (currentIndex != 0) {
@@ -309,7 +363,6 @@
             return array;
         }
 
-        // Spin Engine Execution Loop
         function shuffleSeats() {
             if (isShuffling) return;
             initAudio();
@@ -329,14 +382,9 @@
             let intervalTime = 70; 
             let elapsed = 0;
 
-            // Generate slots structure including KOSONG slots
-            let tempPool = [...students];
-            while (tempPool.length < TOTAL_SEATS) {
-                tempPool.push("KOSONG");
-            }
-
             const loop = setInterval(() => {
-                let randomTickState = shuffleArray([...tempPool]);
+                // Gunakan valid arrangement bahkan saat animasi spin agar mereka tetap nempel
+                let randomTickState = generateValidArrangement(students);
                 renderLayout(randomTickState, true);
                 playClickSound();
                 
@@ -344,12 +392,11 @@
                 if (elapsed >= duration) {
                     clearInterval(loop);
                     
-                    // Definitive ultimate state shuffle
-                    currentArrangement = shuffleArray([...tempPool]);
+                    // Hasil akhir
+                    currentArrangement = generateValidArrangement(students);
                     renderLayout(currentArrangement, false);
                     playChimeSound();
 
-                    // Persist state to storage
                     localStorage.setItem('saved_seating_arrangement', JSON.stringify(currentArrangement));
 
                     btn.disabled = false;
@@ -359,7 +406,6 @@
             }, intervalTime);
         }
 
-        // Modal Box Control UI Toggles
         function toggleModal(show) {
             const modal = document.getElementById('modal-edit');
             if (show) {
@@ -371,7 +417,6 @@
             }
         }
 
-        // Save Names Handler From Input Area
         function saveStudentsList() {
             const textarea = document.getElementById('input-names');
             const lines = textarea.value.split('\n')
@@ -394,7 +439,6 @@
             toggleModal(false);
         }
 
-        // Self run bootstrap trigger
         window.onload = initializeSeating;
     </script>
 </body>
