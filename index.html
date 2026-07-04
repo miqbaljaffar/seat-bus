@@ -236,41 +236,44 @@
             renderLayout(currentArrangement, false);
         }
 
-        // FUNGSI BARU: Logika penempatan khusus (Anisa & Romansyah)
+        // FUNGSI BARU: Logika penempatan khusus (Anisa diapit Zacky dan Pasya)
         function generateValidArrangement(sourceStudents) {
             let arr = new Array(TOTAL_SEATS).fill(null);
             
-            // Cek apakah keduanya masih ada di dalam daftar (berjaga-jaga jika dihapus via Edit Siswa)
+            // Cek apakah ketiganya masih ada di dalam daftar
             let hasAnisa = sourceStudents.includes("Anisa");
-            let hasRomansyah = sourceStudents.includes("Romansyah");
+            let hasZacky = sourceStudents.includes("Zacky");
+            let hasPasya = sourceStudents.includes("Pasya");
             
-            if (hasAnisa && hasRomansyah) {
-                // Daftar index awal di mana 2 orang bisa duduk bersebelahan 
+            if (hasAnisa && hasZacky && hasPasya) {
+                // Daftar index awal di mana 3 orang bisa duduk bersebelahan 
                 // Tanpa terpotong baris (tiap baris ada 4 kursi) dan tanpa lompat lorong
-                const validPairStarts = [
-                    0, 1, 2,        // Baris 1 Kiri
-                    4, 5, 6,        // Baris 2 Kiri
-                    8, 9, 10,       // Baris 3 Kiri
-                    12, 13, 14,     // Baris 4 Kiri
-                    16, 17, 18,     // Baris 1 Kanan
-                    20, 21, 22,     // Baris 2 Kanan
-                    24, 25, 26,     // Baris 3 Kanan
-                    28, 29, 30      // Baris 4 Kanan
+                // Misalnya: index 0,1,2 aman (kursi 1,2,3). Tapi index 2 tidak aman (kursi 3,4, lorong)
+                const validTripletStarts = [
+                    0, 1,       // Baris 1 Kiri
+                    4, 5,       // Baris 2 Kiri
+                    8, 9,       // Baris 3 Kiri
+                    12, 13,     // Baris 4 Kiri
+                    16, 17,     // Baris 1 Kanan
+                    20, 21,     // Baris 2 Kanan
+                    24, 25,     // Baris 3 Kanan
+                    28, 29      // Baris 4 Kanan
                 ];
                 
-                // Pilih secara acak lokasi kursi untuk mereka berdua
-                const pairStart = validPairStarts[Math.floor(Math.random() * validPairStarts.length)];
+                // Pilih secara acak lokasi kursi untuk mereka bertiga
+                const tripletStart = validTripletStarts[Math.floor(Math.random() * validTripletStarts.length)];
                 
-                // Acak siapa yang duduk di sebelah kiri dan siapa di kanan
-                const pair = Math.random() > 0.5 ? ["Anisa", "Romansyah"] : ["Romansyah", "Anisa"];
+                // Acak siapa yang duduk di sebelah kiri dan siapa di kanan (Anisa selalu di tengah)
+                const triplet = Math.random() > 0.5 ? ["Zacky", "Anisa", "Pasya"] : ["Pasya", "Anisa", "Zacky"];
                 
                 // Tempatkan mereka di array utama
-                arr[pairStart] = pair[0];
-                arr[pairStart + 1] = pair[1];
+                arr[tripletStart] = triplet[0];
+                arr[tripletStart + 1] = triplet[1];
+                arr[tripletStart + 2] = triplet[2];
                 
-                // Saring sisa siswa selain Anisa dan Romansyah
-                let pool = sourceStudents.filter(s => s !== "Anisa" && s !== "Romansyah");
-                while(pool.length < TOTAL_SEATS - 2) {
+                // Saring sisa siswa selain Anisa, Zacky, dan Pasya
+                let pool = sourceStudents.filter(s => s !== "Anisa" && s !== "Zacky" && s !== "Pasya");
+                while(pool.length < TOTAL_SEATS - 3) {
                     pool.push("KOSONG");
                 }
                 
@@ -330,8 +333,6 @@
                         sideTheme = "bg-indigo-50 border-indigo-300 text-indigo-700 shuffling-active shadow-md shadow-indigo-50";
                     }
 
-                    // Baris kode highlight warna pink untuk Anisa dan Romansyah telah dihapus
-
                     card.className = `${sideTheme} rounded-xl p-3 flex flex-col justify-between items-center min-h-[76px] transition-all text-center select-none`;
                     
                     const labelBadgeColor = isLeft ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-sky-50 text-sky-700 border-sky-100";
@@ -380,7 +381,6 @@
             let elapsed = 0;
 
             const loop = setInterval(() => {
-                // Gunakan valid arrangement bahkan saat animasi spin agar mereka tetap nempel
                 let randomTickState = generateValidArrangement(students);
                 renderLayout(randomTickState, true);
                 playClickSound();
