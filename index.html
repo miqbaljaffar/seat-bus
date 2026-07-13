@@ -236,66 +236,13 @@
             renderLayout(currentArrangement, false);
         }
 
-        // FUNGSI BARU: Logika penempatan khusus (Anisa diapit Zacky dan Pasya)
+        // FUNGSI BARU: Acak murni tanpa syarat apapun
         function generateValidArrangement(sourceStudents) {
-            let arr = new Array(TOTAL_SEATS).fill(null);
-            
-            // Cek apakah ketiganya masih ada di dalam daftar
-            let hasAnisa = sourceStudents.includes("Anisa");
-            let hasZacky = sourceStudents.includes("Zacky");
-            let hasPasya = sourceStudents.includes("Pasya");
-            
-            if (hasAnisa && hasZacky && hasPasya) {
-                // Daftar index awal di mana 3 orang bisa duduk bersebelahan 
-                // Tanpa terpotong baris (tiap baris ada 4 kursi) dan tanpa lompat lorong
-                // Misalnya: index 0,1,2 aman (kursi 1,2,3). Tapi index 2 tidak aman (kursi 3,4, lorong)
-                const validTripletStarts = [
-                    0, 1,       // Baris 1 Kiri
-                    4, 5,       // Baris 2 Kiri
-                    8, 9,       // Baris 3 Kiri
-                    12, 13,     // Baris 4 Kiri
-                    16, 17,     // Baris 1 Kanan
-                    20, 21,     // Baris 2 Kanan
-                    24, 25,     // Baris 3 Kanan
-                    28, 29      // Baris 4 Kanan
-                ];
-                
-                // Pilih secara acak lokasi kursi untuk mereka bertiga
-                const tripletStart = validTripletStarts[Math.floor(Math.random() * validTripletStarts.length)];
-                
-                // Acak siapa yang duduk di sebelah kiri dan siapa di kanan (Anisa selalu di tengah)
-                const triplet = Math.random() > 0.5 ? ["Zacky", "Anisa", "Pasya"] : ["Pasya", "Anisa", "Zacky"];
-                
-                // Tempatkan mereka di array utama
-                arr[tripletStart] = triplet[0];
-                arr[tripletStart + 1] = triplet[1];
-                arr[tripletStart + 2] = triplet[2];
-                
-                // Saring sisa siswa selain Anisa, Zacky, dan Pasya
-                let pool = sourceStudents.filter(s => s !== "Anisa" && s !== "Zacky" && s !== "Pasya");
-                while(pool.length < TOTAL_SEATS - 3) {
-                    pool.push("KOSONG");
-                }
-                
-                // Acak sisa siswa
-                pool = shuffleArray(pool);
-                
-                // Masukkan sisa siswa ke kursi yang masih kosong (null)
-                let poolIdx = 0;
-                for(let i = 0; i < TOTAL_SEATS; i++) {
-                    if (arr[i] === null) {
-                        arr[i] = pool[poolIdx];
-                        poolIdx++;
-                    }
-                }
-            } else {
-                // Jika salah satu dari mereka dihapus dari daftar, gunakan acakan normal
-                let pool = [...sourceStudents];
-                while(pool.length < TOTAL_SEATS) pool.push("KOSONG");
-                arr = shuffleArray(pool);
+            let pool = [...sourceStudents];
+            while(pool.length < TOTAL_SEATS) {
+                pool.push("KOSONG");
             }
-            
-            return arr;
+            return shuffleArray(pool);
         }
 
         function buildFreshArrangement() {
